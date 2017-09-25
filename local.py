@@ -1,10 +1,11 @@
 # coding=utf-8
 import os
 import requests
-from file import read_file, get_file_list, diff
+from file import read_file, get_file_list, diff, get_config
+import pickle
 
-root_path = ''
-server_url = ''
+root_path = get_config('local', 'sync_path')
+server_url = get_config('local', 'sync_url')
 
 
 def request():

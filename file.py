@@ -1,10 +1,18 @@
 # coding=utf-8
-import json
 import pickle
 import os
 import hashlib
+import ConfigParser
 
-exclude = ['.pyc', '.xml']
+
+def get_config(section, key):
+    config = ConfigParser.ConfigParser()
+    path = os.path.split(os.path.realpath(__file__))[0] + '/sync.conf'
+    config.read(path)
+    return config.get(section, key)
+
+
+exclude_ext = get_config('public', 'exclude_ext').split(';')
 sep = '/'
 
 
@@ -57,7 +65,7 @@ def get_file_list(root_path):
     file_set = set()
     for root, dirs, files in os.walk('.', topdown=False):
         for name in files:
-            if os.path.splitext(name)[1] in exclude:
+            if os.path.splitext(name)[1] in exclude_ext:
                 continue
             file_set.add(File(sep.join((root, name))))
     return file_set
@@ -82,3 +90,7 @@ def write_file(f):
 def md5file(path):
     fp = open(path, 'rb')
     return hashlib.md5(fp.read()).hexdigest()
+
+
+if __name__ == '__main__':
+    print repr(exclude_ext)

@@ -1,11 +1,11 @@
 # coding=utf-8
 import os
-from file import write_file, get_file_list
+from file import write_file, get_file_list, get_config
 from flask import Flask, request
 import pickle
 
 app = Flask(__name__)
-root_path = ''
+root_path = get_config('server', 'sync_path') + '/sync'
 
 
 @app.route('/sync', methods=['GET'])
