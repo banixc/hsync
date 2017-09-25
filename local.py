@@ -1,4 +1,5 @@
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
 import requests
 from file import read_file, get_file_list, diff, get_config

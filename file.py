@@ -1,9 +1,11 @@
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import pickle
 import os
 import hashlib
 import ConfigParser
 import time
+
 
 def get_config(section, key):
     config = ConfigParser.ConfigParser()
@@ -52,7 +54,7 @@ def diff(source, targets):
             new.add(s)
         else:
             if t.md5 == s.md5:
-            #if t.mod_time == s.mod_time:
+                # if t.mod_time == s.mod_time:
                 same.add(s)
             elif t.mod_time > s.mod_time:
                 old.add(s)
