@@ -3,7 +3,7 @@ import pickle
 import os
 import hashlib
 import ConfigParser
-
+import time
 
 def get_config(section, key):
     config = ConfigParser.ConfigParser()
@@ -27,6 +27,9 @@ class File:
         self.access_time = int(os.path.getctime(self.path)) if access_time is None else access_time
         self.mod_time = int(os.path.getmtime(self.path)) if mod_time is None else mod_time
         self.file_data = None if file_data is None else file_data
+
+    def get_mod_time(self):
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.mod_time))
 
     def __eq__(self, other):
         return self.path == other.path and self.md5 == other.md5 and self.mod_time == other.mod_time and self.access_time == other.access_time

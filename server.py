@@ -1,11 +1,12 @@
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
 from file import write_file, get_file_list, get_config
 from flask import Flask, request
 import pickle
 
 app = Flask(__name__)
-root_path = get_config('server', 'sync_path') + '/sync'
+root_path = get_config('server', 'sync_path')
 
 
 @app.route('/sync', methods=['GET'])
@@ -23,5 +24,4 @@ def post():
 
 if __name__ == '__main__':
     os.chdir(root_path)
-    app.run(debug=True, port=7179)
-
+    app.run(debug=False, port=7179)

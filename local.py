@@ -5,7 +5,7 @@ from file import read_file, get_file_list, diff, get_config
 import pickle
 
 root_path = get_config('local', 'sync_path')
-server_url = get_config('local', 'sync_url')
+server_url = get_config('local', 'sync_url') + '/sync'
 
 
 def request():
@@ -28,6 +28,5 @@ if __name__ == '__main__':
     for i in (update | new):
         post(i)
     for i in old:
-        print '[old] %s' % i.path
-        # post(i)
+        print '[old][%s]\t%s' % (i.get_mod_time(), i.path)
 
