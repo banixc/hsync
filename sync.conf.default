@@ -1,5 +1,6 @@
 [public]
 exclude_ext = .pyc;.log;.xml
+exclude_dir = oss/html
 
 [server]
 sync_path = /path/to/sync

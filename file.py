@@ -5,6 +5,9 @@ import os
 import hashlib
 import ConfigParser
 import time
+import re
+
+re.split('_#|', 'this_is#a|test')
 
 
 def get_config(section, key):
@@ -14,8 +17,35 @@ def get_config(section, key):
     return config.get(section, key)
 
 
-exclude_ext = get_config('public', 'exclude_ext').split(';')
+exclude_ext_list = get_config('public', 'exclude_ext').split(';')
+exclude_dir_list = get_config('public', 'exclude_dir').split(';')
 sep = '/'
+
+
+def root_exclude(root):
+    for exclude_dir in exclude_dir_list:
+        exclude_dir = dir_to_list(exclude_dir)
+        root = dir_to_list(root)
+        if dir_in(root, exclude_dir):
+            return True
+    return False
+
+
+def dir_to_list(dir_str):
+    dir_list = re.split(r'/|\\', dir_str)
+    if '.' in dir_list:
+        dir_list.remove('.')
+    return dir_list
+
+
+# 判断dir1是否为dir2的子目录
+def dir_in(dir1, dir2):
+    if len(dir1) < len(dir2):
+        return False
+    for i in range(len(dir2)):
+        if dir1[i] != dir2[i]:
+            return False
+    return True
 
 
 class File:
@@ -54,7 +84,6 @@ def diff(source, targets):
             new.add(s)
         else:
             if t.md5 == s.md5:
-                # if t.mod_time == s.mod_time:
                 same.add(s)
             elif t.mod_time > s.mod_time:
                 old.add(s)
@@ -69,8 +98,10 @@ def get_file_list(root_path):
     os.chdir(root_path)
     file_set = set()
     for root, dirs, files in os.walk('.', topdown=False):
+        if root_exclude(root):
+            continue
         for name in files:
-            if os.path.splitext(name)[1] in exclude_ext:
+            if os.path.splitext(name)[1] in exclude_ext_list:
                 continue
             file_set.add(File(sep.join((root, name))))
     return file_set
@@ -98,4 +129,4 @@ def md5file(path):
 
 
 if __name__ == '__main__':
-    print repr(exclude_ext)
+    get_file_list(r'C:\Users\banixcyan\Desktop\Code\kb_proj\trunk\old_news')
