@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 from file import write_file, Server
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, jsonify
 import pickle
 
 app = Flask(__name__)

@@ -39,8 +39,8 @@ class Server:
     def root_exclude(self, root):
         for exclude_dir in self.exclude_dir_list:
             exclude_dir = dir_to_list(exclude_dir)
-            root = dir_to_list(root)
-            if dir_in(root, exclude_dir):
+            root_dir_list = dir_to_list(root)
+            if dir_in(root_dir_list, exclude_dir):
                 return True
         return False
 
