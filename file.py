@@ -7,28 +7,61 @@ import ConfigParser
 import time
 import re
 
-re.split('_#|', 'this_is#a|test')
+
+class Server:
+    conf = None
+    server_name_list = []
+
+    def __init__(self, name):
+        self.name = name
+        self.root = self.get_conf('path')
+        self.exclude_ext_list = self.get_conf('exclude_ext', '').split(';')
+        self.exclude_dir_list = self.get_conf('exclude_dir', '').split(';')
+        self.sync_url = self.get_conf('server_url')
+
+    def get_conf(self, key, value=None):
+        if Server.conf.has_option(self.name, key):
+            return Server.conf.get(self.name, key)
+        return value
+
+    def get_file_list(self):
+        os.chdir(self.root)
+        file_set = set()
+        for root, dirs, files in os.walk('.', topdown=False):
+            if self.root_exclude(root):
+                continue
+            for name in files:
+                if os.path.splitext(name)[1] in self.exclude_ext_list:
+                    continue
+                file_set.add(File(sep.join((root, name))))
+        return file_set
+
+    def root_exclude(self, root):
+        for exclude_dir in self.exclude_dir_list:
+            exclude_dir = dir_to_list(exclude_dir)
+            root = dir_to_list(root)
+            if dir_in(root, exclude_dir):
+                return True
+        return False
+
+    def get_server_url(self):
+        return self.sync_url
+
+    @classmethod
+    def get_server_list(cls, name):
+        Server.conf = get_config(name)
+        Server.server_name_list = Server.conf.sections()
+        return {server_name: Server(server_name) for server_name in Server.server_name_list}
 
 
-def get_config(section, key):
+def get_config(name):
     config = ConfigParser.ConfigParser()
-    path = os.path.split(os.path.realpath(__file__))[0] + '/sync.conf'
+    path = os.path.split(os.path.realpath(__file__))[0] + '/' + name
     config.read(path)
-    return config.get(section, key)
+    return config
 
 
-exclude_ext_list = get_config('public', 'exclude_ext').split(';')
-exclude_dir_list = get_config('public', 'exclude_dir').split(';')
 sep = '/'
-
-
-def root_exclude(root):
-    for exclude_dir in exclude_dir_list:
-        exclude_dir = dir_to_list(exclude_dir)
-        root = dir_to_list(root)
-        if dir_in(root, exclude_dir):
-            return True
-    return False
 
 
 def dir_to_list(dir_str):
@@ -94,19 +127,6 @@ def diff(source, targets):
     return new, overwrite, old, same
 
 
-def get_file_list(root_path):
-    os.chdir(root_path)
-    file_set = set()
-    for root, dirs, files in os.walk('.', topdown=False):
-        if root_exclude(root):
-            continue
-        for name in files:
-            if os.path.splitext(name)[1] in exclude_ext_list:
-                continue
-            file_set.add(File(sep.join((root, name))))
-    return file_set
-
-
 def read_file(f):
     fp = open(f.path, 'rb')
     f.file_data = fp.read()
@@ -126,7 +146,3 @@ def write_file(f):
 def md5file(path):
     fp = open(path, 'rb')
     return hashlib.md5(fp.read()).hexdigest()
-
-
-if __name__ == '__main__':
-    get_file_list(r'C:\Users\banixcyan\Desktop\Code\kb_proj\trunk\old_news')

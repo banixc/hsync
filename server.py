@@ -1,27 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from file import write_file, get_file_list, get_config
-from flask import Flask, request
+from file import write_file, Server
+from flask import Flask, request, make_response, jsonify
 import pickle
 
 app = Flask(__name__)
-root_path = get_config('server', 'sync_path')
+server_list = Server.get_server_list('server.conf')
 
 
-@app.route('/sync', methods=['GET'])
-def get():
-    root_tree = get_file_list(root_path)
-    return pickle.dumps(root_tree)
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify(server_list.keys())
 
 
-@app.route('/sync', methods=['POST'])
-def post():
-    file_data = request.get_data()
-    write_file(file_data)
-    return 'success!'
+@app.route('/<string:name>', methods=['GET'])
+def get(name):
+    if name in server_list:
+        server = server_list[name]
+        os.chdir(server.root)
+        root_tree = server.get_file_list()
+        return pickle.dumps(root_tree)
+    return ''
+
+
+@app.route('/<string:name>', methods=['POST'])
+def post(name):
+    if name in server_list:
+        server = server_list[name]
+        os.chdir(server.root)
+        file_data = request.get_data()
+        write_file(file_data)
+        return 'success!'
+    return ''
 
 
 if __name__ == '__main__':
-    os.chdir(root_path)
-    app.run(debug=False, port=7179)
+    app.run(host='0.0.0.0', debug=False, port=7179)
