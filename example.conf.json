@@ -1,0 +1,24 @@
+[
+  {
+    "local_path": ".",
+    "exclude_ext": [
+      ".pyc",
+      ".o"
+    ],
+    "exclude_dir": [
+      "dir1",
+      "dir2/dir3",
+      ".git"
+    ],
+    "server": [
+      {
+        "remote_path": "/tmp/to/path",
+        "remote_url": "http://192.168.88.128:6688"
+      },
+      {
+        "remote_path": "/tmp/to/path2",
+        "remote_url": "http://192.168.88.128:6688"
+      }
+    ]
+  }
+]

@@ -1,37 +1,55 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 import hashlib
-import ConfigParser
-import time
-import re
 import json
+import os
+import pickle
+import re
 import struct
+import time
+
+import requests
+
+sep = '/'
 
 
-class Server:
-    conf = None
-    server_name_list = []
-
-    def __init__(self, name):
-        self.name = name
-        self.root = self.get_conf('path')
-        self.exclude_ext_list = self.get_conf('exclude_ext', '').split(';')
-        self.exclude_dir_list = self.get_conf('exclude_dir', '').split(';')
-        self.sync_url = self.get_conf('server_url')
-        if self.conf.has_option(self.name, 'overwrite'):
-            self.overwrite = self.conf.getboolean(self.name, 'overwrite')
-
-    def get_conf(self, key, value=None):
-        if Server.conf.has_option(self.name, key):
-            return Server.conf.get(self.name, key)
-        return value
+class Dir:
+    def __init__(self, root_path, exclude_ext_list, exclude_dir_list):
+        self.root_path = root_path
+        if not os.path.exists(root_path):
+            os.makedirs(root_path)
+        os.chdir(self.root_path)
+        self.exclude_ext_list = exclude_ext_list
+        self.exclude_dir_list = exclude_dir_list
 
     def get_file_list(self):
-        os.chdir(self.root)
+
+        def root_exclude(exclude_dir_list, _root):
+
+            def dir_to_list(dir_str):
+                dir_list = re.split(r'/|\\', dir_str)
+                if '.' in dir_list:
+                    dir_list.remove('.')
+                return dir_list
+
+            # 判断dir1是否为dir2的子目录
+            def dir_in(dir1, dir2):
+                if len(dir1) < len(dir2):
+                    return False
+                for i in range(len(dir2)):
+                    if dir1[i] != dir2[i]:
+                        return False
+                return True
+
+            for exclude_dir in exclude_dir_list:
+                exclude_dir = dir_to_list(exclude_dir)
+                root_dir_list = dir_to_list(_root)
+                if dir_in(root_dir_list, exclude_dir):
+                    return True
+            return False
         file_set = set()
         for root, dirs, files in os.walk('.', topdown=False):
-            if self.root_exclude(root):
+            if root_exclude(self.exclude_ext_list, root):
                 continue
             for name in files:
                 if os.path.splitext(name)[1] in self.exclude_ext_list:
@@ -39,49 +57,37 @@ class Server:
                 file_set.add(File(sep.join((root, name))))
         return file_set
 
-    def root_exclude(self, root):
-        for exclude_dir in self.exclude_dir_list:
-            exclude_dir = dir_to_list(exclude_dir)
-            root_dir_list = dir_to_list(root)
-            if dir_in(root_dir_list, exclude_dir):
-                return True
-        return False
 
-    def get_server_url(self):
-        return self.sync_url
-
-    @classmethod
-    def get_server_list(cls, name):
-        Server.conf = get_config(name)
-        Server.server_name_list = Server.conf.sections()
-        return {server_name: Server(server_name) for server_name in Server.server_name_list}
+class ServerDir(Dir):
+    pass
 
 
-def get_config(name):
-    config = ConfigParser.ConfigParser()
-    path = os.path.split(os.path.realpath(__file__))[0] + '/' + name
-    config.read(path)
-    return config
+class LocalDir(Dir):
+    class ServerPart:
+        def __init__(self, path, url):
+            self.path = path
+            self.url = url
 
+        def get_request_url(self):
+            return self.url + self.path
 
-sep = '/'
+    def __init__(self, conf):
+        Dir.__init__(self, root_path=conf['local_path'],
+                     exclude_ext_list=conf.get('exclude_ext', ()),
+                     exclude_dir_list=conf.get('exclude_dir', ()),
+                     )
+        self.server_list = [LocalDir.ServerPart(server['remote_path'], server['remote_url']) for server in conf['server']]
 
+    def request(self, index):
+        tree_list = requests.get(self.server_list[index].get_request_url()).content
+        if len(tree_list) == 0:
+            return None
+        return pickle.loads(tree_list)
 
-def dir_to_list(dir_str):
-    dir_list = re.split(r'/|\\', dir_str)
-    if '.' in dir_list:
-        dir_list.remove('.')
-    return dir_list
-
-
-# 判断dir1是否为dir2的子目录
-def dir_in(dir1, dir2):
-    if len(dir1) < len(dir2):
-        return False
-    for i in range(len(dir2)):
-        if dir1[i] != dir2[i]:
-            return False
-    return True
+    def post(self, index, file_data):
+        print 'uploading %s' % file_data.path
+        file_data.read_file()
+        requests.post(self.server_list[index].get_request_url(), data=file_data.to_json())
 
 
 class File:
@@ -161,4 +167,3 @@ def diff(source, targets):
 def md5file(file_path):
     fp = open(file_path, 'rb')
     return hashlib.md5(fp.read()).hexdigest()
-

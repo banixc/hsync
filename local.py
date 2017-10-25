@@ -1,58 +1,63 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-import requests
-from file import Server, diff
-import pickle
+import json
 import sys
 
-operate_section = []
+from file import LocalDir, diff
 
-server_list = Server.get_server_list('local.conf')
+DEFAULT_CONF = 'conf.json'
 
 
-def request(server_url):
-    tree_list = requests.get(server_url).content
-    if len(tree_list) == 0:
+# 递归方式转化所有unicode为utf8
+def unicode_in_iter_to_utf8(iterable):
+    if type(iterable) == unicode:
+        return iterable.encode('utf-8')
+    if type(iterable) == dict:
+        new_dict = {}
+        for k, v in iterable.items():
+            new_dict[unicode_in_iter_to_utf8(k)] = unicode_in_iter_to_utf8(v)
+        return new_dict
+    if type(iterable) == tuple or type(iterable) == list:
+        new_list = []
+        for v in iterable:
+            new_list.append(unicode_in_iter_to_utf8(v))
+        return new_list
+
+    return iterable
+
+
+# 避免json解析错误抛出异常 并转化结果为utf8 解析错误返回None
+def json_decode(json_str):
+    try:
+        return unicode_in_iter_to_utf8(json.loads(json_str))
+    except ValueError, e:
         return None
-    return pickle.loads(tree_list)
 
 
-def post(server_url, f):
-    print 'uploading %s' % f.path
-    f.read_file()
-    requests.post(server_url, data=f.to_json())
+def init_conf(filename):
+    with open(filename) as f:
+        return json_decode(f.read())
+
+
+# def get_dir_name_list(conf):
+#     return [{'name': section['name'], 'conf': section} for section in conf]
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        operate_section = server_list.keys()
+        conf_filename = DEFAULT_CONF
     else:
-        operate_section = sys.argv[1:]
-    for section in operate_section:
-        try:
-            if section not in server_list:
-                print('%s not in local.conf!' % section)
-                continue
-            else:
-                server = server_list[section]
-                print('start sync %s : %s' % (section, server.sync_url))
-                os.chdir(server.root)
-                server_file_list = request(server.get_server_url())
-                if server_file_list is None:
-                    print('server not have %s' % section)
-                    continue
-                local_file = server.get_file_list()
+        conf_filename = sys.argv[1]
 
-                new, update, old, same = diff(local_file, server_file_list)
-                print 'new: %s, update: %s, old: %s, same: %s' % (len(new), len(update), len(old), len(same))
-                for i in (update | new):
-                    post(server.get_server_url(), i)
-                if server.overwrite:
-                    for i in old:
-                        post(server.get_server_url(), i)
-                else:
-                    for i in old:
-                        print '[old][%s]\t%s' % (i.get_mod_time(), i.path)
-        except Exception, e:
-            print repr(e)
+    conf = init_conf(conf_filename)
+
+    for c in conf:
+        local_dir = LocalDir(c)
+        local_file = local_dir.get_file_list()
+        for i in range(len(local_dir.server_list)):
+            server_file_list = local_dir.request(i)
+            new, update, old, same = diff(local_file, server_file_list)
+            for f in (update | new):
+                local_dir.post(i, f)
+            for f in old:
+                print '[old][%s]\t%s' % (f.get_mod_time(), f.path)
