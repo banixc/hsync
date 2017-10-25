@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import pickle
 import os
 import hashlib
 import ConfigParser
 import time
 import re
+import json
+import struct
 
 
 class Server:
@@ -18,6 +19,8 @@ class Server:
         self.exclude_ext_list = self.get_conf('exclude_ext', '').split(';')
         self.exclude_dir_list = self.get_conf('exclude_dir', '').split(';')
         self.sync_url = self.get_conf('server_url')
+        if self.conf.has_option(self.name, 'overwrite'):
+            self.overwrite = self.conf.getboolean(self.name, 'overwrite')
 
     def get_conf(self, key, value=None):
         if Server.conf.has_option(self.name, key):
@@ -102,6 +105,34 @@ class File:
     def __hash__(self):
         return hash(self.path) ^ hash(self.md5) ^ hash(self.mod_time) ^ hash(self.access_time)
 
+    def to_json(self):
+        return json.dumps({
+            'path': self.path,
+            'md5': self.md5,
+            'access_time': self.access_time,
+            'mod_time': self.mod_time,
+            'file_data': self.file_data
+        })
+
+    def read_file(self):
+        data = open(self.path, 'rb').read()
+        self.file_data = struct.unpack('%sB' % len(data), data)
+
+    def write_file(self):
+        p_path = os.path.split(self.path)[0]
+        if p_path != '' and not os.path.exists(p_path):
+            os.makedirs(p_path)
+        data = struct.pack('%sB' % len(self.file_data), *self.file_data)
+        fp = open(self.path, 'wb+')
+        fp.write(data)
+        os.utime(self.path, (self.access_time, self.mod_time))
+
+    @staticmethod
+    def from_json(json_data):
+        data_dict = json.loads(json_data)
+        return File(path=data_dict['path'], md5=data_dict['md5'], access_time=data_dict['access_time'],
+                    mod_time=data_dict['mod_time'], file_data=data_dict['file_data'])
+
 
 def diff(source, targets):
     target_dic = {}
@@ -127,22 +158,7 @@ def diff(source, targets):
     return new, overwrite, old, same
 
 
-def read_file(f):
-    fp = open(f.path, 'rb')
-    f.file_data = fp.read()
-    return pickle.dumps(f)
-
-
-def write_file(f):
-    f = pickle.loads(f)
-    p_path = os.path.split(f.path)[0]
-    if p_path != '' and not os.path.exists(p_path):
-        os.makedirs(p_path)
-    fp = open(f.path, 'wb+')
-    fp.write(f.file_data)
-    os.utime(f.path, (f.access_time, f.mod_time))
-
-
-def md5file(path):
-    fp = open(path, 'rb')
+def md5file(file_path):
+    fp = open(file_path, 'rb')
     return hashlib.md5(fp.read()).hexdigest()
+

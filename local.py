@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import requests
-from file import read_file, Server, diff
+from file import Server, diff
 import pickle
 import sys
 
@@ -20,7 +20,8 @@ def request(server_url):
 
 def post(server_url, f):
     print 'uploading %s' % f.path
-    requests.post(server_url, data=read_file(f))
+    f.read_file()
+    requests.post(server_url, data=f.to_json())
 
 
 if __name__ == '__main__':
@@ -29,23 +30,29 @@ if __name__ == '__main__':
     else:
         operate_section = sys.argv[1:]
     for section in operate_section:
-        if section not in server_list:
-            print('%s not in local.conf!' % section)
-            continue
-        else:
-            server = server_list[section]
-            print('start sync %s : %s' % (section, server.sync_url))
-            os.chdir(server.root)
-            server_file_list = request(server.get_server_url())
-            if server_file_list is None:
-                print('server not have %s' % section)
+        try:
+            if section not in server_list:
+                print('%s not in local.conf!' % section)
                 continue
-            local_file = server.get_file_list()
+            else:
+                server = server_list[section]
+                print('start sync %s : %s' % (section, server.sync_url))
+                os.chdir(server.root)
+                server_file_list = request(server.get_server_url())
+                if server_file_list is None:
+                    print('server not have %s' % section)
+                    continue
+                local_file = server.get_file_list()
 
-            new, update, old, same = diff(local_file, server_file_list)
-            print 'new: %s, update: %s, old: %s, same: %s' % (len(new), len(update), len(old), len(same))
-            for i in (update | new):
-                post(server.get_server_url(), i)
-            for i in old:
-                print '[old][%s]\t%s' % (i.get_mod_time(), i.path)
-
+                new, update, old, same = diff(local_file, server_file_list)
+                print 'new: %s, update: %s, old: %s, same: %s' % (len(new), len(update), len(old), len(same))
+                for i in (update | new):
+                    post(server.get_server_url(), i)
+                if server.overwrite:
+                    for i in old:
+                        post(server.get_server_url(), i)
+                else:
+                    for i in old:
+                        print '[old][%s]\t%s' % (i.get_mod_time(), i.path)
+        except Exception, e:
+            print repr(e)

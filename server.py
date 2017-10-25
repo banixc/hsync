@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from file import write_file, Server
+from file import Server, File
 from flask import Flask, request, jsonify
 import pickle
 
@@ -30,10 +30,11 @@ def post(name):
         server = server_list[name]
         os.chdir(server.root)
         file_data = request.get_data()
-        write_file(file_data)
+        f = File.from_json(file_data)
+        f.write_file()
         return 'success!'
     return ''
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=7179)
+    app.run(host='0.0.0.0', debug=False, port=6688)
