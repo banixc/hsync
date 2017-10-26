@@ -4,7 +4,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='hsync',
-      version='1.0',
+      version='1.0.2',
       description='a file sync tools based http',
       author='banixc',
       author_email='banixc@qq.com',

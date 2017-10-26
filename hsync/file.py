@@ -121,7 +121,8 @@ class File:
         })
 
     def read_file(self):
-        data = open(self.path, 'rb').read()
+        with open(self.path, 'rb') as f:
+            data = f.read()
         self.file_data = struct.unpack('%sB' % len(data), data)
 
     def write_file(self):
@@ -129,8 +130,8 @@ class File:
         if p_path != '' and not os.path.exists(p_path):
             os.makedirs(p_path)
         data = struct.pack('%sB' % len(self.file_data), *self.file_data)
-        fp = open(self.path, 'wb+')
-        fp.write(data)
+        with open(self.path, 'wb+') as f:
+            f.write(data)
         os.utime(self.path, (self.access_time, self.mod_time))
 
     @staticmethod

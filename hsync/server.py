@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import argparse
 import os
-from file import ServerDir, File
-from flask import Flask, request
 import pickle
+
+from flask import Flask, request
 from werkzeug.routing import BaseConverter
+
+from hsync.file import ServerDir, File
 
 
 class RegexConverter(BaseConverter):
@@ -17,6 +20,19 @@ class RegexConverter(BaseConverter):
 app = Flask(__name__)
 
 app.url_map.converters['regex'] = RegexConverter
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-p', '--port', default=6688, help='http server bind port default: 6688')
+
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version='%(prog)s 1.0.1',
+    )
+    return parser.parse_args()
 
 
 @app.route('/<regex("([\/\w-]+)*$"):root_path>', methods=['GET'])
@@ -37,7 +53,8 @@ def post(root_path):
 
 
 def run():
-    app.run(host='0.0.0.0', debug=True, port=6688)
+    args = _parse_args()
+    app.run(host='0.0.0.0', debug=False, port=args.port)
 
 
 if __name__ == '__main__':

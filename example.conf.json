@@ -1,5 +1,6 @@
 [
   {
+    "name": "example",
     "local_path": ".",
     "exclude_ext": [
       ".pyc",
