@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import os
 import sys
 
 from file import LocalDir, diff
 
-DEFAULT_CONF = 'conf.json'
+DEFAULT_CONF = '.hsync.json'
 
 
 # 递归方式转化所有unicode为utf8
@@ -43,9 +44,10 @@ def init_conf(filename):
 #     return [{'name': section['name'], 'conf': section} for section in conf]
 
 
-if __name__ == '__main__':
+def run():
+    home = os.environ.get('USERPROFILE', os.environ.get('HOME', '.'))
     if len(sys.argv) == 1:
-        conf_filename = DEFAULT_CONF
+        conf_filename = home + '/' + DEFAULT_CONF
     else:
         conf_filename = sys.argv[1]
 

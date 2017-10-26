@@ -19,14 +19,14 @@ app = Flask(__name__)
 app.url_map.converters['regex'] = RegexConverter
 
 
-@app.route('/<regex("[a-zA-Z0-9/]+"):root_path>', methods=['GET'])
+@app.route('/<regex("([\/\w-]+)*$"):root_path>', methods=['GET'])
 def get(root_path):
     root_path = '/' + root_path
     server_dir = ServerDir(root_path, (), ())
     return pickle.dumps(server_dir.get_file_list())
 
 
-@app.route('/<regex("[a-zA-Z0-9/]+"):root_path>', methods=['POST'])
+@app.route('/<regex("([\/\w-]+)*$"):root_path>', methods=['POST'])
 def post(root_path):
     root_path = '/' + root_path
     os.chdir(root_path)
@@ -36,5 +36,9 @@ def post(root_path):
     return 'success!'
 
 
-if __name__ == '__main__':
+def run():
     app.run(host='0.0.0.0', debug=True, port=6688)
+
+
+if __name__ == '__main__':
+    run()

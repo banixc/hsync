@@ -1,7 +1,0 @@
-[example1]
-path = /path/to/test1
-
-[example2]
-path = /path/to/test2
-exclude_ext = .pyc;.log;.xml
-exclude_dir = oss/html

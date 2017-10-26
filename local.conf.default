@@ -1,9 +1,0 @@
-[test3]
-path = /path/to/test
-server_url = http://127.0.0.1:7179/test1
-
-[test4]
-path = /path/to/test  # windows use / replace \ like C:/path/to/sync
-exclude_ext = .pyc;.log;.xml
-exclude_dir = oss/html;.git
-server_url = http://127.0.0.1:7179/test2
