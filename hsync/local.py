@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 
-from hsync.file import LocalDir, diff
+from .file import LocalDir, diff
 
 DEFAULT_CONF = os.environ.get('USERPROFILE', os.environ.get('HOME', '.')) + '/' + '.hsync.json'
 DEFAULT_SYNC_DIR = 'all'
@@ -61,7 +61,7 @@ def get_dir_name_list(conf):
     return dir_name
 
 
-def run():
+def main():
     args = _parse_args()
     conf = init_conf(args.conf)
     dir_name = get_dir_name_list(conf)
@@ -94,4 +94,4 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    main()

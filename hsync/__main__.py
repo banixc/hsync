@@ -8,10 +8,11 @@
 
 @contact: banixcyan@gmail.com
 
-@time: 2017/10/26 13:54
+@time: 2017/10/27 13:30
 
 @desc:
 
 """
-import local
-import file
+from local import main
+
+main()

@@ -52,10 +52,10 @@ def post(root_path):
     return 'success!'
 
 
-def run():
+def main():
     args = _parse_args()
     app.run(host='0.0.0.0', debug=False, port=args.port)
 
 
 if __name__ == '__main__':
-    run()
+    main()
