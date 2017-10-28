@@ -1,4 +1,3 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import local
-import file
+from hsync import local, server
