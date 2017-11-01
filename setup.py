@@ -14,8 +14,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'hsync = local:run',
-            'hsyncd = server:run',
+            'hsync = hsync.local:run',
+            'hsyncd = hsync.server:run',
         ],
     }
 )

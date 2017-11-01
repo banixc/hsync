@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 
-from dir import LocalDir
+from .dir import LocalDir
 
 DEFAULT_CONF = os.environ.get('USERPROFILE', os.environ.get('HOME', '.')) + '/' + '.hsync.json'
 DEFAULT_SYNC_DIR = 'all'

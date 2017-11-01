@@ -7,8 +7,7 @@ import os
 from flask import Flask, request
 from werkzeug.routing import BaseConverter
 
-from hsync.dir import ServerDir
-from hsync.file import File
+from .dir import ServerDir, File
 
 
 def _parse_args_server():
