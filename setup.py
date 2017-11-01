@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup(
     name='hsync',
-    version='1.0.3',
+    version='1.0.4',
     description='a file sync tools based http',
     author='banixc',
     author_email='banixc@qq.com',
@@ -14,8 +14,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'hsync = hsync:local',
-            'hsyncd = hsync:server',
+            'hsync = local:run',
+            'hsyncd = server:run',
         ],
     }
 )

@@ -1,3 +1,5 @@
-import hsync
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import local
 
-hsync.local()
+local.run()
