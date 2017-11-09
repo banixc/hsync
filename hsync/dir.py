@@ -35,10 +35,12 @@ class File:
         p_path = os.path.split(self.path)[0]
         if p_path != '' and not os.path.exists(p_path):
             os.makedirs(p_path)
-        new_fp = open(self.path, 'wb')
-        data = fp.read()
-        new_fp.write(data)
-        new_fp.close()
+        try:
+            with open(self.path, 'wb') as new_fp:
+                data = fp.read()
+                new_fp.write(data)
+        except IOError:
+            return
         os.utime(self.path, (self.access_time, self.mod_time))
 
     def to_json(self):
@@ -143,10 +145,11 @@ class LocalDir(Dir):
     def post(self, index, file_data):
         print 'uploading %s' % file_data.path
         with open(file_data.path, 'rb') as fp:
-            requests.post(self.server_list[index].get_request_url(),
-                          data=file_data.__dict__,
-                          files={'file_body': fp}
-                          )
+            data = requests.post(self.server_list[index].get_request_url(),
+                                 data=file_data.__dict__,
+                                 files={'file_body': fp}
+                                 )
+            print data.text
 
 
 if __name__ == '__main__':

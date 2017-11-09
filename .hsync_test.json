@@ -1,0 +1,21 @@
+[
+  {
+    "name" : "test",
+    "local_path": "C:/Users/banixcyan/Desktop/Code/kb_proj/trunk/old_news/tools",
+    "exclude_ext": [
+      ".pyc",
+      ".o"
+    ],
+    "exclude_dir": [
+      "dir1",
+      "dir2/dir3",
+      ".git"
+    ],
+    "server": [
+      {
+        "remote_path": "/C:/test",
+        "remote_url": "http://127.0.0.1:6688/"
+      }
+    ]
+  }
+]

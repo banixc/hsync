@@ -30,28 +30,30 @@ class RegexConverter(BaseConverter):
         self.regex = args[0]
 
 
+app = Flask(__name__)
+app.url_map.converters['regex'] = RegexConverter
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+
+
+@app.route('/<regex("([:\/\w-]+)*$"):root_path>', methods=['GET'])
+def get(root_path):
+    root_path = '/' + root_path
+    server_dir = ServerDir(root_path, (), ())
+    return json.dumps([i.__dict__ for i in server_dir.get_file_list()])
+
+
+@app.route('/<regex("([:\/\w-]+)*$"):root_path>', methods=['POST'])
+def post(root_path):
+    root_path = '/' + root_path
+    os.chdir(root_path)
+    f = File.from_json(json.dumps(request.form))
+    file_body = request.files.get('file_body')
+    f.write_file(file_body)
+    return 'success!'
+
+
 def run():
     args = _parse_args_server()
-
-    app = Flask(__name__)
-
-    app.url_map.converters['regex'] = RegexConverter
-
-    @app.route('/<regex("([:\/\w-]+)*$"):root_path>', methods=['GET'])
-    def get(root_path):
-        root_path = '/' + root_path
-        server_dir = ServerDir(root_path, (), ())
-        return json.dumps([i.__dict__ for i in server_dir.get_file_list()])
-
-    @app.route('/<regex("([:\/\w-]+)*$"):root_path>', methods=['POST'])
-    def post(root_path):
-        root_path = '/' + root_path
-        os.chdir(root_path)
-        f = File.from_json(json.dumps(request.form))
-        file_body = request.files.get('file_body')
-        f.write_file(file_body)
-        return 'success!'
-
     app.run(host='0.0.0.0', debug=False, port=args.port)
 
 
